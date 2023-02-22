@@ -76,13 +76,6 @@ body     { font-family: "Gill Sans Extrabold", Helvetica, sans-serif }
     text-align: center;
 }
 
-#geojson {
-    position: absolute;
-    right: 5%;
-    top: 940px;
-    width: 10%;
-}
-
 .distance-container {
     position: relative;
     top: 3px;
