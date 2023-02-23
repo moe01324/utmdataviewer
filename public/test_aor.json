@@ -1,0 +1,85 @@
+﻿{
+   "id" : "54ed57cd-3425-401e-940e-1a2b31861234",
+   "name" : "TEST_AOR",
+   "designator" : "RA_TEST_AOR",
+   "geometry" : {
+      "type" : "Polygon",
+      "coordinates" :  [
+          [
+            [
+              16.512575976413075,
+              47.93670154478511
+            ],
+            [
+              16.481878713154828,
+              47.860877771818025
+            ],
+            [
+              16.351549981422835,
+              47.88327539129176
+            ],
+            [
+              16.40217353837582,
+              47.80773505049348
+            ],
+            [
+              16.5287324307605,
+              47.82039301601546
+            ],
+            [
+              16.573970502931047,
+              47.88616470159039
+            ],
+            [
+              16.512575976413075,
+              47.93670154478511
+            ]
+          ]
+        ]
+   },
+   "extendedGeometry" : {
+      "type" : "Polygon",
+      "coordinates" :  [
+          [
+            [
+              16.512575976413075,
+              47.93670154478511
+            ],
+            [
+              16.481878713154828,
+              47.860877771818025
+            ],
+            [
+              16.351549981422835,
+              47.88327539129176
+            ],
+            [
+              16.40217353837582,
+              47.80773505049348
+            ],
+            [
+              16.5287324307605,
+              47.82039301601546
+            ],
+            [
+              16.573970502931047,
+              47.88616470159039
+            ],
+            [
+              16.512575976413075,
+              47.93670154478511
+            ]
+          ]
+        ]
+   },
+   "autoApprovalEnabled" : "False",
+   "aorEnabled" : "True",
+   "minimumAltitudeInMeters" : "20",
+   "maximumAltitudeInMeters" : "500",
+   "verticalReferenceType" : "AGL",
+   "autoReject" : false,
+   "autoTakeOffClearanceEnabled" : "False",
+   "maxSimultaneousOperationsEnabled" : "False",
+   "maxSimultaneousOperations" : "1000",
+   "featureType" : "responsibilityarea"
+}
