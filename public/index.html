@@ -3,13 +3,12 @@
 
 <head>
     <meta charset="utf-8">
-    <title>UTM Drone Simulator</title>
+    <title>UTM Data Viewer</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
     <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
          
-    const {mapToNewObject} = require("@perpk/json-xform");
     <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 
@@ -17,45 +16,37 @@
     <div class="wrapper">
         <div class="box a">
             <div id="title" name="title" class="title">UTM Data Viewer</div>
-                <label id="labelclient" for="client" class="block_label">Client ID</label>
-                <input type="text" name="client" id="client" class="block" onkeyup="saveCredentials()" placeholder="Client ID">
-                <label id="labelsecret" for="secret" class="block_label">Client Secret</label>
-                <input type="text" name="secret" class="block" id="secret" onkeyup="saveCredentials()" placeholder="Client Secret">
-                <button id="authenticate" class="button_half" onclick="authServer()">Authenticate</button>
-                <label id="labelbearer" for="bearer"class="block_label" >Bearer Token</label>
-            <input type="text" name="bearer" id="bearer" class="block" onkeyup="setTokenManually()" placeholder="Bearer Token">
-            
+
         </div>
         <div class="b">
             <div id="map" ></div>
-            <div id="distance" class="distance-container"></div>
         </div>
         <div class="box c">
-            <input type="file" id="file-input" /> 
-            <pre id="file-content"></pre>   
+            <div id="title" name="title" class="title">Load AoRs</div>
+            <label id="labelaorupperlimit" for="aorupperlimit" class="block_label">AoR Upper Limit Max</label>
+            <input type="text" name="aorupperlimit" id="aorupperlimit" class="block"  placeholder="9999">
+            <label id="labelaormulitplier" for="aormulitplier" class="block_label">AoR Height Multiplier</label>
+            <input type="text" name="aormultiplier" id="aormultiplier" class="block"  placeholder="1">
+            <input id="files" type="file" multiple="multiple" />
+        </br>
+        </br>
+        </br>
+        </br>
+        </br>
 
-            <button id="convert" onclick="convert()" class="block">Convert & Load AoRs</button>
-     
+            <div id="title" name="title" class="title">Load ED-269 Geozones</div>
+            <input id="filesed269" type="file" multiple="multiple" />
+
         <div class="modallink" id="modallink" name="modallink">
             <a href="#demo-modal">Info</a>
         </div>
             
-        </div>
-        <div class="box d">
-            <input type="text" name="geojson" id="geojson" class="block" placeholder="ZONE GEOJSON" onkeyup="loadJSONZone()"> 
-
         </div>
       </div>
 
     <div class="modal" id="demo-modal" hidden>
         <div class="modal__content">
         <b>UTM Data Viewer</b>
-        </br></br>
-        (*) Connected to NBD-UTM instance. https://smartsis-airlabs.utm-labs-frequentis.com/
-        </br></br>
-        (*) Alert Subscriptions are needed for alert ack
-        </br></br>
-        (*) OP Subscriptions are needed fo close
         </br></br>
         (*) Note: Altitude is the "middle value". Uncertainity of 10m is added via the according computeOP call.
         </br></br>
@@ -65,9 +56,9 @@
         </br></br>
         (*) Note: URL parameter "?loadjson" enables a field to directly load a zone.
         </br></br>
-        (*) Sources at: https://github.com/moe01324/utmsim
+        (*) Sources at: https://github.com/moe01324/utmdataviewer
         </br></br>
-        (*) version 21.12.2022
+        (*) version 22.02.2023
         </br></br>
    
         <a href="#" class="modal__close">&times;</a>
@@ -75,29 +66,48 @@
     </div>
     <script>
         function readSingleFile(e) {
-        var file = e.target.files[0];
-        if (!file) {
-            return;
-        }
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var contents = e.target.result;
-            displayContents(contents);
-        };
-        reader.readAsText(file);
+            var file = e;
+            if (!file) {
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var contents = e.target.result;
+                displayContents(contents);
+            };
+            reader.readAsText(file);
         }
 
         function displayContents(contents) {
 
-        var aor = contents;
-        convert(aor);
-
-        //var element = document.getElementById('file-content');
-        //element.textContent = contents;
+            var aor = contents;
+            convert(aor);
         }
 
-        document.getElementById('file-input')
-        .addEventListener('change', readSingleFile, false);
+
+
+        document.getElementById('files').addEventListener('change', handleFileSelect, false);
+
+
+        function handleFileSelect(event) {
+            //Check File API support
+            if (window.File && window.FileList && window.FileReader) {
+
+                var files = event.target.files; //FileList object
+                var output = document.getElementById("result");
+
+                for (var i = 0; i < files.length; i++) {
+                    var file = files[i];
+                    //Only pics
+                // if (!file.type.match('image')) continue;
+
+                    readSingleFile(file);
+
+                }
+            } else {
+                console.log("Your browser does not support File API");
+            }
+        }
 
         var token = "";
         var access_token = "";
@@ -249,11 +259,13 @@
         }
 
         function convert(aor) {
-           
-            const obj = JSON.parse(aor);
+            const myArray = aor.split("%");
             bo = new Object();
             bo.type = "FeatureCollection";
-            bo.features = [{
+
+            for (var k=0;k<myArray.length;k++){  
+                const obj = JSON.parse(myArray[k]); 
+                bo.features = [{
                 "type": "Feature", 
                 "geometry": obj.geometry,
                 "properties": {
@@ -262,70 +274,53 @@
                 "name": obj.name
                 }
             }];
-          
 
-            console.log(bo);
+           }
+           console.log(bo);
 
-        }
+           map.addSource(bo.features[0].properties.name, {
+            'type': 'geojson',
+            /*
+             * Each feature in this GeoJSON file contains values for
+             * `properties.height`, `properties.base_height`,
+             * and `properties.color`.
+             * In `addLayer` you will use expressions to set the new
+             * layer's paint properties based on these values.
+             */
+            'data': bo
+            });
 
-        function authServer() {
-            credentials = new Object();
-            credentials.client = document.getElementById("client").value;
-            credentials.secret = (document.getElementById("secret").value);
+            var aorupperlimit = document.getElementById("aorupperlimit").value;
+            var aormultiplier = document.getElementById("aormultiplier").value;
 
-            (async () => {
-                const rawResponse = await fetch('/authutm', {
-                    method: 'POST',
-                    body: JSON.stringify(credentials),
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
+            map.addLayer({
+                'id': bo.features[0].properties.name,
+                'type': 'fill-extrusion',
+                'source': bo.features[0].properties.name,
+                'paint': {
+                    // Get the `fill-extrusion-color` from the source `color` property.
+                    'fill-extrusion-color': "#" + Math.floor(Math.random()*16777215).toString(16),
+
+                    // Get `fill-extrusion-height` from the source `height` property.
+                    'fill-extrusion-height': bo.features[0].properties.maximumAltitudeInMeters * 1 * aormultiplier,
+
+                    // Get `fill-extrusion-base` from the source `base_height` property.
+                    'fill-extrusion-base': bo.features[0].properties.minimumAltitudeInMeters * 1,
+
+                    // Make extrusions slightly opaque to see through indoor walls.
+                    'fill-extrusion-opacity': 0.5
                 }
-                );
-                token = await rawResponse.json();
-                if (debug) {
-                    console.log(token);
-                }
-                setToken(token.access_token);
-            }
-            )();
+            });
         }
 
         function loadJSONZone() {
             if (document.getElementById("geojson").value !== "" ) {
-
-
                 var geo = document.getElementById("geojson").value;
    
                 const obj = JSON.parse(geo);
-
-
-
                 map.getSource('geojsonzone').setData(obj);
             }
    
-        }
-
-
-        function enableSim() {      
-            saveCredentials();
-        }
-
-        function saveCredentials() {
-            localStorage.utmclient = document.getElementById("client").value;
-            localStorage.utmsecret = document.getElementById("secret").value;
-     
-        }
-
-        function setToken(token) {
-            access_token = token;
-            document.getElementById("bearer").value = token;
-
-        }
-
-        function setTokenManually() {
-            access_token = document.getElementById("bearer").value;
         }
 
         const UUIDGeneratorBrowser = () =>

@@ -1,7 +1,7 @@
   .wrapper {
           display: grid;
           grid-gap: 10px;
-          grid-template-columns: 20% 20% 58%;
+          grid-template-columns: 24% 1% 73%;
 
           color: #444;
       }
@@ -16,7 +16,7 @@
       }
   
       .a {
-          grid-column: 1 / span 2;
+          grid-column: 1 / span 1;
          
       }
       .b {
@@ -36,7 +36,7 @@
       }
 
 body { margin: 5; padding: 5; background-color: #444;}
-#map { position: absolute; top: 0; bottom: 0; width: 58%; border-radius: 5px; margin: 8px;}
+#map { position: absolute; top: 0; bottom: 0; width: 73%; border-radius: 5px; margin: 8px;}
 
 body     { font-family: "Gill Sans Extrabold", Helvetica, sans-serif }
 
