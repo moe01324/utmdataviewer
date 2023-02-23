@@ -22,11 +22,13 @@
             <div id="map" ></div>
         </div>
         <div class="box c">
-            <div id="title" name="title" class="title">Load AoRs</div>
+            <div id="title" name="title" class="title2">Load AoRs</div>
+        </br>
             <label id="labelaorupperlimit" for="aorupperlimit" class="block_label">AoR Upper Limit Max</label>
             <input type="text" name="aorupperlimit" id="aorupperlimit" class="block" value="9999" placeholder="9999">
             <label id="labelaormulitplier" for="aormulitplier" class="block_label">AoR Height Multiplier</label>
             <input type="text" name="aormultiplier" id="aormultiplier" class="block"  value ="3" placeholder="3">
+        </br>
             <input id="files" type="file" multiple="multiple" />
         </br>
         </br>
@@ -34,9 +36,15 @@
         </br>
         </br>
 
-            <div id="title" name="title" class="title">Load ED-269 Geozones</div>
+            <div id="title" name="title" class="title2">Load ED-269 Geozones</div>
+        </br>
+        <label id="labeledupperlimit" for="edupperlimit" class="block_label">ED-269 Upper Limit Max</label>
+        <input type="text" name="aorupperlimit" id="edupperlimit" class="block" value="9999" placeholder="9999">
+        <label id="labeledmulitplier" for="edmulitplier" class="block_label">ED-269 Height Multiplier</label>
+        <input type="text" name="edmultiplier" id="edmultiplier" class="block"  value ="1" placeholder="1">
+    </br>
             <input id="filesed269" type="file" multiple="multiple" />
-
+        </br></br>
         <div class="modallink" id="modallink" name="modallink">
             <a href="#demo-modal">Info</a>
         </div>
@@ -48,11 +56,9 @@
         <div class="modal__content">
         <b>UTM Data Viewer</b>
         </br></br>
-        (*) Note: 
+        (*) Note: ONE file per AoR. 3 AoRs are 3 files.
         </br></br>
-        (*) Note: 
-        </br></br>
-        (*) Note: 
+        (*) Note: ALL geozones in ONE file.
         </br></br>
         (*) Sources at: https://github.com/moe01324/utmdataviewer
         </br></br>
@@ -71,36 +77,50 @@
             var reader = new FileReader();
             reader.onload = function(e) {
                 var contents = e.target.result;
-                displayContents(contents);
+                convertanddisplay(contents);
             };
             reader.readAsText(file);
         }
 
-        function displayContents(contents) {
-
-            var aor = contents;
-            convert(aor);
+        function readSingleFileed269(e) {
+            var file = e;
+            if (!file) {
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var contents = e.target.result;
+                convertanddisplayed269(contents);
+            };
+            reader.readAsText(file);
         }
-
-
 
         document.getElementById('files').addEventListener('change', handleFileSelect, false);
 
+        document.getElementById('filesed269').addEventListener('change', handleFileSelected269, false);
 
         function handleFileSelect(event) {
-            //Check File API support
             if (window.File && window.FileList && window.FileReader) {
-
                 var files = event.target.files; //FileList object
                 var output = document.getElementById("result");
 
                 for (var i = 0; i < files.length; i++) {
                     var file = files[i];
-                    //Only pics
-                // if (!file.type.match('image')) continue;
-
                     readSingleFile(file);
+                }
+            } else {
+                console.log("Your browser does not support File API");
+            }
+        }
 
+        function handleFileSelected269(event) {
+            if (window.File && window.FileList && window.FileReader) {
+                var files = event.target.files; //FileList object
+                var output = document.getElementById("result");
+
+                for (var i = 0; i < files.length; i++) {
+                    var file = files[i];
+                    readSingleFileed269(file);
                 }
             } else {
                 console.log("Your browser does not support File API");
@@ -165,7 +185,7 @@
                 localStorage.utmcenterlat = center.lat;
                 localStorage.utmcenterlng = center.lng;           
             }
-            );
+        );
 
 
         map.on('style.load', () => {    
@@ -221,7 +241,7 @@
             document.getElementById("info").hidden = !document.getElementById("info").hidden;
         }
 
-        function convert(aor) {
+        function convertanddisplay(aor) {
             const myArray = aor.split("%");
             bo = new Object();
             bo.type = "FeatureCollection";
@@ -273,6 +293,64 @@
                 }
             });
         }
+
+        function convertanddisplayed269(aor) {
+            const objects = JSON.parse(aor); 
+            
+            for (var k=0;k<objects.length;k++){ 
+            bo = new Object();
+            bo.type = "FeatureCollection";
+
+             
+                const obj = objects[k]; 
+                bo.features = [{
+                "type": "Feature", 
+                "geometry": obj.geometry[0].horizontalProjection,
+                "properties": {
+                "minimumAltitudeInMeters": obj.geometry[0].lowerLimit, 
+                "maximumAltitudeInMeters": obj.geometry[0].upperLimit, 
+                "name": obj.name
+                }
+            }];
+
+        
+           console.log(bo);
+
+           map.addSource(bo.features[0].properties.name, {
+            'type': 'geojson',
+            'data': bo
+            });
+
+            var edupperlimit = document.getElementById("edupperlimit").value;
+            var edmultiplier = document.getElementById("edmultiplier").value;
+            var upperlimit = bo.features[0].properties.maximumAltitudeInMeters * 1 * edmultiplier;
+
+            if (upperlimit  > edupperlimit){
+                upperlimit = edupperlimit;
+            }
+
+            map.addLayer({
+                'id': bo.features[0].properties.name,
+                'type': 'fill-extrusion',
+                'source': bo.features[0].properties.name,
+                'paint': {
+                    // Get the `fill-extrusion-color` from the source `color` property.
+                    'fill-extrusion-color': "#" + Math.floor(Math.random()*16777215).toString(16),
+
+                    // Get `fill-extrusion-height` from the source `height` property.
+                    'fill-extrusion-height': upperlimit,
+
+                    // Get `fill-extrusion-base` from the source `base_height` property.
+                    'fill-extrusion-base': bo.features[0].properties.minimumAltitudeInMeters * 1,
+
+                    // Make extrusions slightly opaque to see through indoor walls.
+                    'fill-extrusion-opacity': 0.5
+                }
+            });
+
+        }
+        }
+
 
         function loadJSONZone() {
             if (document.getElementById("geojson").value !== "" ) {

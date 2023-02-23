@@ -76,6 +76,15 @@ body     { font-family: "Gill Sans Extrabold", Helvetica, sans-serif }
     text-align: center;
 }
 
+
+.title2 {
+  display: grid;
+  margin: 10px;
+  font-size: 20px;
+  width: 100%;
+  text-align: center;
+}
+
 .distance-container {
     position: relative;
     top: 3px;
