@@ -24,9 +24,9 @@
         <div class="box c">
             <div id="title" name="title" class="title">Load AoRs</div>
             <label id="labelaorupperlimit" for="aorupperlimit" class="block_label">AoR Upper Limit Max</label>
-            <input type="text" name="aorupperlimit" id="aorupperlimit" class="block"  placeholder="9999">
+            <input type="text" name="aorupperlimit" id="aorupperlimit" class="block" value="9999" placeholder="9999">
             <label id="labelaormulitplier" for="aormulitplier" class="block_label">AoR Height Multiplier</label>
-            <input type="text" name="aormultiplier" id="aormultiplier" class="block"  placeholder="1">
+            <input type="text" name="aormultiplier" id="aormultiplier" class="block"  value ="3" placeholder="3">
             <input id="files" type="file" multiple="multiple" />
         </br>
         </br>
@@ -48,17 +48,15 @@
         <div class="modal__content">
         <b>UTM Data Viewer</b>
         </br></br>
-        (*) Note: Altitude is the "middle value". Uncertainity of 10m is added via the according computeOP call.
+        (*) Note: 
         </br></br>
-        (*) Note: Click the "rogue" button again to send the drone back to the nominal flight path.
+        (*) Note: 
         </br></br>
-        (*) Note: URL parameter "?debug" enables a bit more client console logging.
-        </br></br>
-        (*) Note: URL parameter "?loadjson" enables a field to directly load a zone.
+        (*) Note: 
         </br></br>
         (*) Sources at: https://github.com/moe01324/utmdataviewer
         </br></br>
-        (*) version 22.02.2023
+        (*) version 23.02.2023
         </br></br>
    
         <a href="#" class="modal__close">&times;</a>
@@ -162,7 +160,15 @@
             'features': []
         };
 
-        map.on('style.load', () => {
+        map.on('click', (e) => {
+                const center = map.getCenter(); map.getCenter();
+                localStorage.utmcenterlat = center.lat;
+                localStorage.utmcenterlng = center.lng;           
+            }
+            );
+
+
+        map.on('style.load', () => {    
             // Insert the layer beneath any symbol layer.
             const layers = map.getStyle().layers;
             const labelLayerId = layers.find(
@@ -211,51 +217,8 @@
             );
         });
 
-        map.on('load', () => {
-
-            map.addSource('geojsonzone', {
-            'type': 'geojson',
-            /*
-             * Each feature in this GeoJSON file contains values for
-             * `properties.height`, `properties.base_height`,
-             * and `properties.color`.
-             * In `addLayer` you will use expressions to set the new
-             * layer's paint properties based on these values.
-             */
-            'data': geojsonzone
-            });
-            map.addLayer({
-                'id': 'room-extrusion',
-                'type': 'fill-extrusion',
-                'source': 'geojsonzone',
-                'paint': {
-                    // Get the `fill-extrusion-color` from the source `color` property.
-                    'fill-extrusion-color': "orange",
-
-                    // Get `fill-extrusion-height` from the source `height` property.
-                    'fill-extrusion-height': 999,
-
-                    // Get `fill-extrusion-base` from the source `base_height` property.
-                    'fill-extrusion-base': 333,
-
-                    // Make extrusions slightly opaque to see through indoor walls.
-                    'fill-extrusion-opacity': 0.5
-                }
-            });
-
-            map.on('click', (e) => {
-                const center = map.getCenter(); map.getCenter();
-                localStorage.utmcenterlat = center.lat;
-                localStorage.utmcenterlng = center.lng;
-                enableSim();               
-            }
-            );
-        }
-        );
-
         function showInfo() {
             document.getElementById("info").hidden = !document.getElementById("info").hidden;
-            
         }
 
         function convert(aor) {
@@ -280,18 +243,16 @@
 
            map.addSource(bo.features[0].properties.name, {
             'type': 'geojson',
-            /*
-             * Each feature in this GeoJSON file contains values for
-             * `properties.height`, `properties.base_height`,
-             * and `properties.color`.
-             * In `addLayer` you will use expressions to set the new
-             * layer's paint properties based on these values.
-             */
             'data': bo
             });
 
             var aorupperlimit = document.getElementById("aorupperlimit").value;
             var aormultiplier = document.getElementById("aormultiplier").value;
+            var upperlimit = bo.features[0].properties.maximumAltitudeInMeters * 1 * aormultiplier;
+
+            if (upperlimit  > aorupperlimit){
+                upperlimit = aorupperlimit;
+            }
 
             map.addLayer({
                 'id': bo.features[0].properties.name,
@@ -302,7 +263,7 @@
                     'fill-extrusion-color': "#" + Math.floor(Math.random()*16777215).toString(16),
 
                     // Get `fill-extrusion-height` from the source `height` property.
-                    'fill-extrusion-height': bo.features[0].properties.maximumAltitudeInMeters * 1 * aormultiplier,
+                    'fill-extrusion-height': upperlimit,
 
                     // Get `fill-extrusion-base` from the source `base_height` property.
                     'fill-extrusion-base': bo.features[0].properties.minimumAltitudeInMeters * 1,

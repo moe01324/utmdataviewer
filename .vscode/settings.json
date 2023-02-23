@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/6c9ce95c-e18a-4aaa-8a61-24564f26db52/AppServices/subscriptions/6c9ce95c-e18a-4aaa-8a61-24564f26db52/resourceGroups/utm-dataviewer/providers/Microsoft.Web/sites/utm-dataviewer",
+    "appService.deploySubpath": "."
+}
